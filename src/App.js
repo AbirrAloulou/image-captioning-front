@@ -1,24 +1,22 @@
-import logo from './logo.svg';
 import './App.css';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import PhotoDisplay from './components/photo_display/PhotoDisplay';
+import FileUploadComponent from './components/file_upload/FileUploadComponent';
+import NotPhoto from './components/not_photo/NotPhoto';
+import Captionizing from './components/captionizing/Captionizing';
+import FinalPhoto from './components/final_photo/FinalPhoto';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<FileUploadComponent />} />
+        <Route path="/photos" element={<PhotoDisplay />} />
+        <Route path="/notaphoto" element={<NotPhoto />} />
+        <Route path="/captionizing" element={<Captionizing />} />
+        <Route path="/final-photo" element={<FinalPhoto />} />
+      </Routes>
+    </Router>
   );
 }
 
