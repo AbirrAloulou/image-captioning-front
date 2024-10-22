@@ -20,7 +20,7 @@ const FinalPhoto = () => {
     };
 
     return (
-        <div className="final-photo-container">
+        <div className="photo-display-container">
             <h2>Final Photo</h2>
             {uploadedImages.length > 0 && (
                 <div className="image-item">

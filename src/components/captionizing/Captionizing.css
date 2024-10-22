@@ -1,0 +1,50 @@
+.photo-display-container-caption {
+    text-align: center;
+    padding: 20px;
+    background-color: #F3F5FF;
+    border-radius: 10px;
+    max-width: 1900px;
+    margin: 0 auto;
+}
+
+.image-item-caption {
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    padding: 10px;
+    max-width: 100%;
+}
+
+.image-item-caption button {
+    padding: 10px 15px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: 600;
+    width: 100%; 
+    display: block;
+    margin: 10px auto;
+}
+
+.image-item-caption button:hover {
+    background-color: #45a049;
+}
+
+.image-pair {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+.image-pair img {
+    width: 800px;
+    height: auto;
+    object-fit: contain;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}

@@ -63,13 +63,15 @@ const Captionizing = () => {
     };
 
     return (
-        <div className="photo-display-container">
+        <div className="photo-display-container-caption">
             <h2>Uploaded Photos</h2>
             <div className="photo-display">
                 {uploadedImages.length > 0 && uploadedImages.map((image, index) => (
-                    <div key={index} className="image-item">
-                        <img src={image.url} alt={image.name} />
-                        <img src={image.url} alt={image.name} />
+                    <div key={index} className="image-item-caption">
+                        <div className="image-pair">
+                            <img src={image.url} alt={image.name} />
+                            <img src={image.url} alt={image.name} />
+                        </div>
                         <button onClick={showGeneratingModal}>Captionizing</button>
                     </div>
                 ))}
