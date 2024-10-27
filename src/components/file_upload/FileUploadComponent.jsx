@@ -3,6 +3,7 @@ import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import { useNavigate } from 'react-router-dom';
 import './FileUploadComponent.css';
+import axios from 'axios';
 
 const MySwal = withReactContent(Swal);
 
@@ -15,7 +16,7 @@ const catGifs = [
     'https://media.tenor.com/6be0tZhr50QAAAAM/lazy-cat.gif'
 ];
 
-const FileUploadComponent = () => {
+const FileUploadComponent = ({setProbability}) => {
     const [files, setFiles] = useState([]);
     const [uploadedImages, setUploadedImages] = useState([]);
     const [overallProgress, setOverallProgress] = useState(0);
@@ -47,12 +48,14 @@ const FileUploadComponent = () => {
     const showLoadingModal = () => {
         MySwal.fire({
             title: 'Uploading files...',
-            html: `
-                <img src="${catGif}" alt="Cat waiting" style="width: 100px; margin-bottom: 10px;">
-                <div style="width: 100%; background: #ddd; height: 10px; margin-top: 10px;">
-                    <div id="overall-progress" style="width: ${overallProgress}%; background: #4caf50; height: 100%;"></div>
-                </div>
-            `,
+            html: (
+                <>
+                    <img src={catGif} alt="Cat waiting" style={{ width: '100px', marginBottom: '10px' }} />
+                    <div style={{ width: '100%', background: '#ddd', height: '10px', marginTop: '10px' }}>
+                        <div style={{ width: `${overallProgress}%`, background: '#4caf50', height: '100%' }}></div>
+                    </div>
+                </>
+            ),
             showConfirmButton: false,
             allowOutsideClick: false,
             allowEscapeKey: false,
@@ -63,53 +66,53 @@ const FileUploadComponent = () => {
     };
 
     const handleUpload = () => {
-        let loadedFiles = 0;
-        const totalFiles = files.length;
-        const newUploadedImages = [];
+        const formData = new FormData();
+        files.forEach(file => {
+            formData.append('file', file);
+        });
 
-        files.forEach((file, index) => {
-            simulateUpload(file, () => {
-                const imageUrl = URL.createObjectURL(file);
-                newUploadedImages.push({ name: file.name, url: imageUrl });
-
-                loadedFiles++;
-                const progressValue = (loadedFiles / totalFiles) * 100;
+        axios.post('http://127.0.0.1:5000/classify', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+            onUploadProgress: (progressEvent) => {
+                const progressValue = (progressEvent.loaded / progressEvent.total) * 100;
                 setOverallProgress(progressValue);
-
-                // Update the progress bar in SweetAlert2 modal
-                const progressBar = document.getElementById('overall-progress');
-                if (progressBar) {
-                    progressBar.style.width = `${progressValue}%`;
-                }
-
-                if (loadedFiles === totalFiles) {
-                    setTimeout(() => {
-                        MySwal.close();
-                        setUploadedImages(newUploadedImages);
-                        // Save the images in localStorage or pass them via state
-                        localStorage.setItem('uploadedImages', JSON.stringify(newUploadedImages));
-                        navigate('/photos');
-                    }, 500);
-                }
+            },
+        })
+        .then(response => {
+            MySwal.close();
+            if (response.data.is_photo) {
+                // Navigate to the photo display interface
+                setProbability(response.data.probability);
+                const uploadedData = [{ name: files[0].name, url: URL.createObjectURL(files[0]) }];
+                setUploadedImages(uploadedData);
+                localStorage.setItem('uploadedImages', JSON.stringify(uploadedData));
+                navigate('/photos');
+            } else {
+                Swal.fire({
+                    title: 'Not a Photo',
+                    text: 'The uploaded file is not recognized as a photo with a probability of : ' + (response.data.probability* 100).toFixed(2) +'%',
+                    icon: 'warning',
+                }).then(() => {
+                    setFiles([]); // Reset the files state to allow for a new upload
+                });
+            }
+        })
+        .catch(error => {
+            console.error("Error uploading the file", error);
+            Swal.fire({
+                title: 'Upload Failed',
+                text: 'There was an error uploading your file. Please try again.',
+                icon: 'error',
             });
         });
     };
 
-    const simulateUpload = (file, callback) => {
-        let progress = 0;
-        const interval = setInterval(() => {
-            progress += 5;
-            if (progress >= 100) {
-                clearInterval(interval);
-                callback();
-            }
-        }, 100);
-    };
-
     return (
         <div className="upload-container">
-            <h1>UPLOAD PHOTOS</h1>
-            <p>Upload files you want to check if it's a taken photo or not.<br />Only jpg, jpeg and png images are allowed.</p>
+            <h1>UPLOAD A PHOTO</h1>
+            <p>Upload the photo you want to check if it's a taken photo or not.<br />Only jpg, jpeg and png images are allowed.</p>
 
             <UploadBox onDrop={handleDrop} onDragOver={handleDragOver} onFileChange={handleFileChange} />
         </div>
@@ -123,12 +126,12 @@ const UploadBox = ({ onDrop, onDragOver, onFileChange }) => (
         onDrop={onDrop}
         onClick={() => document.getElementById('fileInput').click()}
     >
-        <p>Drag & Drop your files here <br /> OR</p>
+        <p>Drag & Drop your photo here <br /> OR</p>
         <button>Browse Files</button>
         <input
             type="file"
             id="fileInput"
-            multiple
+            accept="image/jpeg, image/png"
             hidden
             onChange={onFileChange}
         />

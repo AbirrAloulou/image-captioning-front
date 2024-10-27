@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './FinalPhoto.css';
 
-const FinalPhoto = () => {
+const FinalPhoto = ({ denoisedImage, caption }) => {
     const [uploadedImages, setUploadedImages] = useState([]);
     const navigate = useNavigate();
 
@@ -22,13 +22,11 @@ const FinalPhoto = () => {
     return (
         <div className="photo-display-container">
             <h2>Final Photo</h2>
-            {uploadedImages.length > 0 && (
                 <div className="image-item">
-                    <img src={uploadedImages[0].url} alt={uploadedImages[0].name} />
-                    <p>Generated Caption</p>
+                    <img src={denoisedImage} alt="denoised image" />
+                    <p>{caption}</p>
                     <button onClick={handleRunAgain}>Run it again</button>
                 </div>
-            )}
         </div>
     );
 };

@@ -1,8 +1,10 @@
+// PhotoDisplay.js
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import { useNavigate } from 'react-router-dom';
 import './PhotoDisplay.css';
+import axios from 'axios';
 
 const MySwal = withReactContent(Swal);
 
@@ -14,33 +16,54 @@ const catGifs = [
     'https://media.tenor.com/TFSWJKHo1LEAAAAM/waiting-patiently-on-you-i-am-bored.gif',
 ];
 
-const PhotoDisplay = () => {
+const PhotoDisplay = ({ setDenoisedImage, probability }) => {
     const [uploadedImages, setUploadedImages] = useState([]);
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Retrieve uploaded images from localStorage
         const images = JSON.parse(localStorage.getItem('uploadedImages'));
         if (images) {
             setUploadedImages(images);
         } else {
-            // If no images are found, redirect back to the upload page
             navigate('/');
         }
     }, [navigate]);
 
-    const handleDenoising = (image) => {
-        // Select a random cat GIF
+    const handleDenoising = async (image) => {
         const gif = catGifs[Math.floor(Math.random() * catGifs.length)];
-
+        const formData = new FormData();
+    
+        // Fetch the actual file from the image object or input source
+        const response = await fetch(image.url);
+        const blob = await response.blob();
+        const file = new File([blob], image.name, { type: blob.type });
+    
+        // Append the file correctly with the name 'file'
+        formData.append('file', file);
+    
+        try {
+            const response = await axios.post('http://localhost:5000/denoise', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+                responseType: 'blob',
+            });
+    
+            const denoisedImageUrl = URL.createObjectURL(response.data);
+            setDenoisedImage(denoisedImageUrl);
+            MySwal.close();
+        } catch (error) {
+            console.error("Error denoising the image", error);
+            Swal.fire({
+                title: 'Denoising Failed',
+                text: 'There was an error denoising your image. Please try again.',
+                icon: 'error',
+            });
+        }
+    
         MySwal.fire({
             title: 'Denoising image...',
-            html: `
-                <img src="${gif}" alt="Cat waiting" style="width: 100px; margin-bottom: 10px;">
-                <div style="width: 100%; background: #ddd; height: 10px; margin-top: 10px;">
-                    <div id="progress-bar" style="width: 0%; background: #4caf50; height: 100%;"></div>
-                </div>
-            `,
+            html: `<img src="${gif}" alt="Cat waiting" style="width: 100px; margin-bottom: 10px;">`,
             showConfirmButton: false,
             allowOutsideClick: false,
             allowEscapeKey: false,
@@ -52,24 +75,28 @@ const PhotoDisplay = () => {
                     if (progressBar) {
                         progressBar.style.width = `${progress}%`;
                     }
-
+    
                     if (progress >= 100) {
                         clearInterval(interval);
                         MySwal.close();
-                        navigate('/captionizing');
+                        navigate('/captioning');
                     }
                 }, 100);
             }
         });
     };
+    
 
     return (
         <div className="photo-display-container">
-            <h2>Uploaded Photos</h2>
+            <h2>Uploaded Photo</h2>
             <div className="photo-display">
                 {uploadedImages.map((image, index) => (
                     <div key={index} className="image-item">
-                        <img src={image.url} alt={image.name} />
+                        <img src={image.url} alt={image.name} width='50' />
+                        {probability !== null && (
+                            <p>Probability: {(probability * 100).toFixed(2)}%</p>
+                        )}
                         <button onClick={() => handleDenoising(image)}>Denoising</button>
                     </div>
                 ))}
